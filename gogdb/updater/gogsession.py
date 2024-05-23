@@ -203,3 +203,11 @@ class GogSession:
             path=self.storage_path / f"raw/catalog/page_{cache_id}.json",
             caching=self.config.get("CACHE_CATALOG", CACHE_NONE)
         )
+
+    async def fetch_ratings(self, prod_id, verified=False):
+        return await self.get_json(
+            f"reviews v1 {prod_id}",
+            url=f"https://reviews.gog.com/v1/products/{prod_id}/averageRating{'?reviewer=verified_owner' if verified else ''}",
+            path=self.storage_path / f"raw/reviews/average_ratings_{prod_id}.json",
+            caching=CACHE_NONE
+        )

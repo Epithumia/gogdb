@@ -243,6 +243,10 @@ async def product_worker(session, qman, db, worker_number):
             v2_cont = await session.fetch_product_v2(prod_id)
             has_v2 = v2_cont and "_embedded" in v2_cont
             if has_v2:
+                v2_cont["ratings"] = {
+                    "all": await session.fetch_ratings(prod_id),
+                    "verified": await session.fetch_ratings(prod_id, True)
+                    }
                 dataextractors.extract_properties_v2(prod, v2_cont)
                 prod.access = 2
                 # Add referenced products to queue

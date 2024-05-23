@@ -186,6 +186,7 @@ def extract_properties_v2(prod, v2_cont):
 
     prod.description = v2_cont["description"]
 
+    prod.ratings = v2_cont["ratings"]
 
 META_ID_RE = re.compile(r"/.{2}/.{2}/(\w{32})")
 def extract_metaid(meta_url):

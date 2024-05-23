@@ -197,6 +197,15 @@ class PriceRecord:
             self.currency == other.currency
         )
 
+@defaultdataclass
+class Rating:
+    value: float
+    count: int
+
+@defaultdataclass
+class GameRating:
+    all: Rating
+    verified: Rating
 
 @defaultdataclass
 class Build:
@@ -272,6 +281,7 @@ class Product:
     dlcs: List[int]
 
     description: str
+    ratings: GameRating
     changelog: str
 
     dl_bonus: List[BonusDownload]
