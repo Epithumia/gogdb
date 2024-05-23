@@ -79,6 +79,7 @@
 <div id="tabs-container" class="shadow">
   <a href="#prices" class="tabs-item no-underline">Prices</a>
   <a href="#details" class="tabs-item no-underline">Details</a>
+  <a href="#ratings" class="tabs-item no-underline">Ratings</a>
   <a href="#references" class="tabs-item no-underline">References</a>
   <a href="#downloads" class="tabs-item no-underline">Downloads</a>
   <a href="#builds" class="tabs-item no-underline">Builds</a>
@@ -364,6 +365,26 @@
     </tr>
   </table>
   {% endif %}
+</div>
+
+<div id="tab-ratings" class="tab">
+  <table class="shadow cellborder">
+    <tr>
+      <th></th>
+      <th class="table-prop">Average Rating</th>
+      <th class="table-prop">Rating Count</th>
+    </tr>
+    <tr>
+      <td class="table-prop rating-row" style="font-weight: bold;">All</td>
+      <td>{{ product.ratings.all.value }}</td>
+      <td>{{ product.ratings.all.count }}</td>
+    </tr>
+    <tr>
+      <td class="table-prop rating-row" style="font-weight: bold;">Verified</td>
+      <td>{{ product.ratings.verified.value }}</td>
+      <td>{{ product.ratings.verified.count }}</td>
+    </tr>
+  </table>
 </div>
 
 <div id="tab-references" class="tab">

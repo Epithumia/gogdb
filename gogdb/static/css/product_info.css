@@ -68,6 +68,10 @@
   width: 1%;
 }
 
+.rating-row {
+  font-weight: bold;
+}
+
 #screen-container, #video-container {
   display: flex;
   flex-wrap: wrap;
