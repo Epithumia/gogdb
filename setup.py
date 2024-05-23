@@ -21,7 +21,10 @@ requires = [
     # util
     "aiohttp",
     "python-dateutil",
-    "bleach"
+    "bleach",
+
+    # serve
+    "uvicorn"
 ]
 
 setup(
