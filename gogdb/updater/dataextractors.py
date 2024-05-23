@@ -135,6 +135,12 @@ def extract_properties_v2(prod, v2_cont):
             slug=x["slug"]
         ) for x in v2_embed["tags"]
     ]
+    prod.properties = [
+        model.Property(
+            name=x["name"],
+            slug=x["slug"]
+        ) for x in v2_embed["properties"]
+    ]
     prod.comp_systems = [
         normalize_system(support_entry["operatingSystem"]["name"])
         for support_entry in v2_embed["supportedOperatingSystems"]
@@ -185,6 +191,9 @@ def extract_properties_v2(prod, v2_cont):
         )
 
     prod.description = v2_cont["description"]
+
+    prod.overview = v2_cont["overview"]
+    prod.additional_requirements = v2_cont.get("additionalRequirements", None)
 
     prod.ratings = v2_cont["ratings"]
 

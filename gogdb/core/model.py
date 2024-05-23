@@ -52,6 +52,11 @@ class Tag:
     slug: str
 
 @defaultdataclass
+class Property:
+    name: str
+    slug: str
+
+@defaultdataclass
 class Series:
     id: int
     name: str
@@ -215,6 +220,7 @@ class Build:
     branch: str
     version: str
     tags: List[str]
+    properties: List[str]
     public: bool
     date_published: datetime.datetime
     generation: int
@@ -237,6 +243,7 @@ class Product:
     features: List[Feature]
     localizations: List[Localization]
     tags: List[Tag]
+    properties: List[Property]
     cs_systems: List[str]
     comp_systems: List[str]
     #dl_systems: List[str]  # never used in V2
@@ -281,6 +288,8 @@ class Product:
     dlcs: List[int]
 
     description: str
+    overview: str
+    additional_requirements: str
     ratings: GameRating
     changelog: str
 
@@ -481,6 +490,7 @@ class RepositoryV2:
     products: List[RepositoryProductV2]
     script_interpreter: bool
     tags: List[str]
+    properties: List[str]
 
 
 

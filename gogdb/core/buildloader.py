@@ -256,6 +256,7 @@ REPOSITORY_V2_DEFAULTS = {
   "products": [],
   "scriptInterpreter": False,
   "tags": [],
+  "properties": [],
   "version": 2
 }
 
@@ -273,7 +274,8 @@ def load_repository_v2(data):
         platform = normalize_system(source["platform"]),
         products = [load_repositoryproduct_v2(x) for x in source["products"]],
         script_interpreter = source["scriptInterpreter"],
-        tags = source["tags"]
+        tags = source["tags"],
+        properties = source["properties"]
     )
 
 
