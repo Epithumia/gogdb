@@ -18,3 +18,7 @@ gogdb/generated/
 
 # Obsolete files
 old
+
+# Dev
+.vscode/
+.python-version
