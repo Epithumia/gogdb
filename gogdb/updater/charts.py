@@ -8,7 +8,8 @@ from lxml.etree import ElementTree, Element, tostring
 import aiofiles
 
 from gogdb.updater.charts_css import CHARTS_CSS
-
+from gogdb.core.model import CURRENCY, COUNTRY_CODE, LOCALE
+from babel.numbers import format_currency
 
 def calculate_y_scale(min_val, max_val, steps_pref):
     """
@@ -67,13 +68,13 @@ class ChartsProcessor:
         pass
 
     async def process(self, data):
-        if data.prices is None or not data.prices["US"]["USD"]:
+        if data.prices is None or not data.prices[COUNTRY_CODE][CURRENCY]:
             return
 
         dataseries_x = []
         dataseries_y = []
 
-        for entry in data.prices["US"]["USD"]:
+        for entry in data.prices[COUNTRY_CODE][CURRENCY]:
             if dataseries_y:
                 dataseries_y.append(dataseries_y[-1])
                 dataseries_x.append(entry.date)
@@ -102,7 +103,7 @@ class ChartsProcessor:
         chart.show_legend = False
         chart.range = (0, y_scale[-1])
         chart.include_x_axis = True
-        chart.value_formatter = lambda p: "${:.2f}".format(p)
+        chart.value_formatter = lambda p: format_currency(p, CURRENCY, locale=LOCALE.replace("-", "_"))
         chart.x_value_formatter = format_date_timestamp
         chart.dots_size = 3
         chart.show_x_guides = True

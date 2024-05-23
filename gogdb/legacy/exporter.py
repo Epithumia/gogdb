@@ -305,18 +305,18 @@ def convert_changelog(l_prod):
     return changelog
 
 def convert_prices(l_prod):
-    price_log = {"US": {"USD": []}}
+    price_log = {new_model.COUNTRY_CODE: {new_model.CURRENCY: []}}
 
     for l_pricerec in l_prod.pricehistory:
         n_record = new_model.PriceRecord(
             date = l_pricerec.date.replace(tzinfo=datetime.timezone.utc),
-            currency = "USD"
+            currency = new_model.CURRENCY
         )
         if l_pricerec.price_base is not None:
             n_record.price_base = int(l_pricerec.price_base * 100)
         if l_pricerec.price_final is not None:
             n_record.price_final = int(l_pricerec.price_final * 100)
-        price_log["US"]["USD"].append(n_record)
+        price_log[new_model.COUNTRY_CODE][new_model.CURRENCY].append(n_record)
     return price_log
 
 def main():

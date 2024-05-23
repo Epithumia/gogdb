@@ -10,7 +10,9 @@ import gogdb.core.model as model
 from gogdb.application.datasources import get_storagedb, get_indexdb_cursor
 from gogdb.core.normalization import decompress_systems
 from gogdb.updater.charts_css import CHARTS_CSS
+from gogdb.core.model import CURRENCY, COUNTRY_CODE, LOCALE
 
+from babel.numbers import format_currency
 
 class MockProduct:
     image_logo = None
@@ -47,7 +49,7 @@ async def product_info(prod_id):
         pricehistory = await storagedb.prices.load(prod_id)
         has_old_prices = False
     if pricehistory:
-        cur_history = pricehistory["US"]["USD"]
+        cur_history = pricehistory[COUNTRY_CODE][CURRENCY]
     else:
         cur_history = []
     changelog = await storagedb.changelog.load(prod_id)
@@ -78,8 +80,8 @@ async def product_info(prod_id):
             "start": start.date,
             "end": end.date,
             "discount": start.discount,
-            "price_final": start.price_final_decimal,
-            "price_base": start.price_base_decimal
+            "price_final": format_currency(start.price_final_decimal, CURRENCY, locale=LOCALE.replace("-","_")),
+            "price_base": format_currency(start.price_base_decimal, CURRENCY, locale=LOCALE.replace("-","_"))
         }
         priceframes.append(frame)
 

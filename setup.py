@@ -23,6 +23,9 @@ requires = [
     "python-dateutil",
     "bleach",
 
+    # localization
+    "babel",
+
     # serve
     "uvicorn"
 ]

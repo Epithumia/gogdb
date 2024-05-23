@@ -6,6 +6,7 @@ import quart
 
 from gogdb.core.storage import Storage
 import gogdb.core.dataclsloader
+from gogdb.core.model import CURRENCY, COUNTRY_CODE
 
 """
 Removes invalid database entries
@@ -44,7 +45,7 @@ async def fix_product_empty(db, prod_id):
 async def fix_price_jitter(price_log, prod_id):
     if price_log is None:
         return
-    currency_log = price_log["US"]["USD"]
+    currency_log = price_log[COUNTRY_CODE][CURRENCY]
     i = 0
     while i < len(currency_log):
         if i >= 1:
@@ -80,7 +81,7 @@ async def remove_extra_fields(db, prod_id):
 async def price_placeholders(price_log, prod_id):
     if price_log is None:
         return
-    currency_log = price_log["US"]["USD"]
+    currency_log = price_log[COUNTRY_CODE][CURRENCY]
     if currency_log:
         num_9999 = len([c for c in currency_log if c.price_base == 9999])
         if 0 < num_9999 < 5:

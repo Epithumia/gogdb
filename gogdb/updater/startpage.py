@@ -57,8 +57,8 @@ class StartpageProcessor:
         on_sale = False
         discount = 0
         prices = data.prices
-        if prices is not None and prices["US"]["USD"]:
-            cur_price = prices["US"]["USD"][-1]
+        if prices is not None and prices[model.COUNTRY_CODE][model.CURRENCY]:
+            cur_price = prices[model.COUNTRY_CODE][model.CURRENCY][-1]
             if cur_price.price_base is not None:
                 discount = cur_price.discount
 

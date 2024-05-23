@@ -3,7 +3,11 @@ from dataclasses import field
 import datetime
 from typing import List, Any
 import decimal
+from os import getenv
 
+LOCALE = getenv("LOCALE", "en-US")
+COUNTRY_CODE = getenv("COUNTRY_CODE", "US")
+CURRENCY = getenv("CURRENCY", "USD")
 
 def get_origin(t):
     """Typing function defined here for compatibility with Python 3.7"""

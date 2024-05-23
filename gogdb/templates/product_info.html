@@ -112,8 +112,8 @@
       <td>-</td>
       <td>-</td>
       {% else %}
-      <td>${{ price.price_base }}</td>
-      <td>${{ price.price_final }}</td>
+      <td>{{ price.price_base }}</td>
+      <td>{{ price.price_final }}</td>
       {% if price.discount > 0 %}
       <td>{{ price.discount }}%</td>
       {% else %}

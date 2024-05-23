@@ -11,7 +11,7 @@ import aiofiles
 
 import gogdb.core.storage as storage
 from gogdb.updater.gogtoken import GogToken
-
+from gogdb.core.model import COUNTRY_CODE, CURRENCY, LOCALE
 
 
 CLIENT_VERSION = "1.2.17.9" # Just for their statistics
@@ -35,7 +35,7 @@ class GogSession:
         headers = {"User-Agent": USER_AGENT}
         self.aio_session = aiohttp.ClientSession(
             connector=aio_connector, headers=headers)
-        self.set_cookie("gog_lc", "US_USD_en-US")
+        self.set_cookie("gog_lc", f"{COUNTRY_CODE}_{CURRENCY}_{LOCALE}")
         self.token = None # Needs to be loaded with load_token
 
     async def load_token(self):
@@ -132,7 +132,7 @@ class GogSession:
     async def fetch_product_v0(self, prod_id):
         return await self.get_json(
             f"api v0 {prod_id}",
-            url=f"https://api.gog.com/products/{prod_id}?expand=downloads,expanded_dlcs,description,screenshots,videos,related_products,changelog&locale=en-US",
+            url=f"https://api.gog.com/products/{prod_id}?expand=downloads,expanded_dlcs,description,screenshots,videos,related_products,changelog&locale={LOCALE}",
             path=self.storage_path / f"raw/prod_v0/{prod_id}_v0.json",
             caching=self.config.get("CACHE_PRODUCT_V0", CACHE_NONE),
             expect_404=True
@@ -141,7 +141,7 @@ class GogSession:
     async def fetch_product_v2(self, prod_id):
         return await self.get_json(
             f"api v2 {prod_id}",
-            url=f"https://api.gog.com/v2/games/{prod_id}?locale=en-US",
+            url=f"https://api.gog.com/v2/games/{prod_id}?locale={LOCALE}",
             path=self.storage_path / f"raw/prod_v2/{prod_id}_v2.json",
             caching=self.config.get("CACHE_PRODUCT_V2", CACHE_NONE),
             expect_404=True

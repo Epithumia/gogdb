@@ -113,9 +113,9 @@ async def catalog_worker(session, qman, db):
     default_params = {
         "order": "asc:title",
         "productType": "in:game,pack,dlc,extras",
-        "countryCode": "US",
-        "locale": "en-US",
-        "currencyCode": "USD"
+        "countryCode": model.COUNTRY_CODE,
+        "locale": model.LOCALE,
+        "currencyCode": model.CURRENCY
     }
     bestselling_params = default_params.copy()
     bestselling_params["order"] = "desc:bestselling"
@@ -150,8 +150,8 @@ async def catalog_worker(session, qman, db):
             await update_price(
                 db,
                 prod_id = prod_id,
-                country = "US",
-                currency = "USD",
+                country = model.COUNTRY_CODE,
+                currency = model.CURRENCY,
                 price_base = cat_entry.price_base,
                 price_final = cat_entry.price_final,
                 now = now
@@ -160,8 +160,8 @@ async def catalog_worker(session, qman, db):
             await update_price(
                 db,
                 prod_id = prod_id,
-                country = "US",
-                currency = "USD",
+                country = model.COUNTRY_CODE,
+                currency = model.CURRENCY,
                 price_base = None,
                 price_final = None,
                 now = now
@@ -171,8 +171,8 @@ async def catalog_worker(session, qman, db):
 async def update_price(db, prod_id, country, currency, price_base, price_final, now):
     price_log = await db.prices.load(prod_id)
     if price_log is None:
-        price_log = {"US": {"USD": []}}
-    currency_log = price_log["US"]["USD"]
+        price_log = {model.COUNTRY_CODE: {model.CURRENCY: []}}
+    currency_log = price_log[model.COUNTRY_CODE][model.CURRENCY]
 
     record = model.PriceRecord(
         currency = currency,
@@ -201,7 +201,7 @@ async def update_price(db, prod_id, country, currency, price_base, price_final, 
         currency_log.append(record)
 
     # Only save if it has entries
-    if price_log["US"]["USD"]:
+    if price_log[model.COUNTRY_CODE][model.CURRENCY]:
         await db.prices.save(price_log, prod_id)
 
 
