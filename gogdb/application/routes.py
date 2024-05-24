@@ -30,6 +30,7 @@ def add_routes(app):
     app.add_url_rule("/manifest/<manifest_id>", "manifest", gogdb.views.manifest.manifest)
     app.add_url_rule("/meta/<meta_id>", "meta", gogdb.views.meta.meta)
     app.add_url_rule("/charts/<int:prod_id>.svg", "charts", gogdb.views.charts.charts)
+    app.add_url_rule("/charts/<int:prod_id>-ratings.svg", "rating_charts", gogdb.views.charts.rating_charts)
     app.add_url_rule("/user/version_mismatch", "version_mismatch", gogdb.views.version_mismatch.version_mismatch)
     app.add_url_rule("/user/dependencies", "dependencies", gogdb.views.dependencies.dependencies)
     # Static pages

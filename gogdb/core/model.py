@@ -203,6 +203,22 @@ class PriceRecord:
         )
 
 @defaultdataclass
+class RatingRecord:
+    value_all: float
+    value_verified: float
+    count_all: int
+    count_verified: int
+    date: datetime.datetime
+
+    def same_rating(self, other):
+        return (
+            self.value_all == other.value_all and
+            self.value_verified == other.value_verified and
+            self.count_all == other.count_all and
+            self.count_verified == other.count_verified
+        )
+
+@defaultdataclass
 class Rating:
     value: float
     count: int

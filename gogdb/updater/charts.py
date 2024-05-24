@@ -143,3 +143,94 @@ class ChartsProcessor:
 
     async def finish(self):
         pass
+
+class RatingChartsProcessor:
+    wants = {"ratings"}
+
+    def __init__(self, db):
+        self.db = db
+
+    async def prepare(self):
+        pass
+
+    async def process(self, data):
+        if data.ratings is None:
+            return
+        
+        dataseries_x = []
+        dataseries_y = []
+        dataseries_y_v = []
+
+        for entry in data.ratings:
+            if dataseries_y:
+                dataseries_y.append(dataseries_y[-1])
+                dataseries_y_v.append(dataseries_y_v[-1])
+                dataseries_x.append(entry.date)
+            if entry.value_all is None:
+                dataseries_y.append(None)
+                dataseries_y_v.append(None)
+                dataseries_x.append(entry.date)
+            else:
+                dataseries_y.append(entry.value_all)
+                dataseries_y_v.append(entry.value_verified)
+                dataseries_x.append(entry.date)
+
+        now_ts = datetime.datetime.now(datetime.timezone.utc).date()
+        dataseries_y.append(dataseries_y[-1])
+        dataseries_y_v.append(dataseries_y_v[-1])
+        dataseries_x.append(now_ts)
+        dataseries_x_ts = [date_to_timestamp(x) for x in dataseries_x]
+        dataseries = list(zip(dataseries_x_ts, dataseries_y))
+        dataseries_v = list(zip(dataseries_x_ts, dataseries_y_v))
+        max_rating = max(max(filter(lambda x: x is not None, dataseries_y)), max(filter(lambda x: x is not None, dataseries_y_v)))
+
+        y_scale = calculate_y_scale(0, max_rating, steps_pref=[5, 4, 6])
+        x_scale = calculate_x_scale(dataseries_x[0], dataseries_x[-1], max_steps=10)
+        x_scale_ts = [date_to_timestamp(d) for d in x_scale]
+
+        chart = pygal.XY()
+        chart.width = 1000
+        chart.height = 300
+        chart.show_legend = False
+        chart.range = (0, y_scale[-1])
+        chart.include_x_axis = True
+        chart.x_value_formatter = format_date_timestamp
+        chart.dots_size = 3
+        chart.show_x_guides = True
+        chart.js = []
+        chart.css = []
+        chart.y_labels = y_scale
+        chart.x_labels = x_scale_ts
+        chart.add("All ratings", dataseries, allow_interruptions=True)
+        chart.add("Verified ratings", dataseries_v, allow_interruptions=True)
+
+        chart_etree = chart.render_tree()
+
+        # Replace default css with custom version
+        defs = chart_etree.find("defs")
+        defs.clear()
+        style_el = Element("style", {"type": "text/css"})
+        style_el.text = CHARTS_CSS
+        defs.append(style_el)
+
+        # Remove useless dots description elements
+        for dots_el in chart_etree.iterfind(".//g[@class='dots']"):
+            for desc_el in dots_el.findall("./desc"):
+                if desc_el.attrib["class"] != "value":
+                    dots_el.remove(desc_el)
+
+        chart_xml = ElementTree(chart_etree)
+        #chart_xml.write("figure.svg", encoding="utf-8", xml_declaration=True, pretty_print=False)
+        chart_bytes = tostring(chart_xml, encoding="utf-8", xml_declaration=True, pretty_print=False)
+        chart_compressed = gzip.compress(chart_bytes)
+        chart_path = self.db.path_rating_chart(str(data.id))
+        try:
+            async with aiofiles.open(chart_path, "wb") as fobj:
+                await fobj.write(chart_compressed)
+        except FileNotFoundError:
+            os.makedirs(chart_path.parent, exist_ok=True)
+            async with aiofiles.open(chart_path, "wb") as fobj:
+                await fobj.write(chart_compressed)
+
+    async def finish(self):
+        pass

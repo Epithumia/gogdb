@@ -50,4 +50,9 @@ CHARTS_CSS = \
   stroke: #f18e00;
   fill: #f18e00;
 }
+
+.pygal-chart .color-1 {
+  stroke: #003f7d;
+  fill: #003f7d;
+}
 """

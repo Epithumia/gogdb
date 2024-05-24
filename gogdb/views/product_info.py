@@ -85,6 +85,41 @@ async def product_info(prod_id):
         }
         priceframes.append(frame)
 
+    rating_history = await storagedb.ratings.load(prod_id)
+    if not rating_history:
+        rating_history = []
+
+    rating_chart = {"labels": [], "values": [], "max": 0}
+    if rating_history:
+        current_rating = copy.copy(rating_history[-1])
+        current_rating.date = datetime.datetime.now(datetime.timezone.utc)
+        rating_history.append(current_rating)
+        last_rating = None
+        for entry in rating_history:
+            if entry.value_all is not None:
+                rating_chart["labels"].append(entry.date.isoformat())
+                rating_chart["values"].append(str(entry.value_all))
+                rating_chart["max"] = max(
+                    rating_chart["max"], entry.value_all)
+            elif last_rating is not None:
+                rating_chart["labels"].append(entry.date.isoformat())
+                rating_chart["values"].append(str(last_rating))
+                rating_chart["labels"].append(entry.date.isoformat())
+                rating_chart["values"].append(None)
+            last_rating = entry.value_all
+
+    ratingframes = []
+    for start, end in zip(rating_history[:-1], rating_history[1:]):
+        frame = {
+            "start": start.date,
+            "end": end.date,
+            "all_ratings": f"{start.value_all} ({start.count_all} votes)",
+            "verified_ratings": f"{start.value_verified} ({start.count_verified} votes)",
+        }
+        ratingframes.append(frame)
+
+    print(ratingframes)
+
     # Prefetch referenced products
     referenced_ids = {
         "editions": [edition.id for edition in product.editions],
@@ -125,7 +160,9 @@ async def product_info(prod_id):
         product=product,
         referenced_products=referenced_products,
         pricehistory=history_chart,
+        ratinghistory=rating_chart,
         priceframes=priceframes,
+        ratingframes=ratingframes,
         has_old_prices=has_old_prices,
         changelog=changelog
     ))

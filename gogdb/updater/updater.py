@@ -17,7 +17,7 @@ from gogdb.updater.gogsession import GogSession
 import gogdb.updater.dataextractors as dataextractors
 from gogdb.updater.indexdb import IndexDbProcessor
 from gogdb.updater.startpage import StartpageProcessor
-from gogdb.updater.charts import ChartsProcessor
+from gogdb.updater.charts import ChartsProcessor, RatingChartsProcessor
 from gogdb.updater.versions import VersionsProcessor
 from gogdb.updater.dependencies import DependenciesProcessor
 
@@ -171,8 +171,8 @@ async def catalog_worker(session, qman, db):
 async def update_price(db, prod_id, country, currency, price_base, price_final, now):
     price_log = await db.prices.load(prod_id)
     if price_log is None:
-        price_log = {model.COUNTRY_CODE: {model.CURRENCY: []}}
-    currency_log = price_log[model.COUNTRY_CODE][model.CURRENCY]
+        price_log = {country: {model.CURRENCY: []}}
+    currency_log = price_log[country][model.CURRENCY]
 
     record = model.PriceRecord(
         currency = currency,
@@ -201,8 +201,45 @@ async def update_price(db, prod_id, country, currency, price_base, price_final, 
         currency_log.append(record)
 
     # Only save if it has entries
-    if price_log[model.COUNTRY_CODE][model.CURRENCY]:
+    if price_log[country][model.CURRENCY]:
         await db.prices.save(price_log, prod_id)
+
+
+async def update_ratings(db, prod_id, value_all, value_verified, count_all, count_verified, now):
+    rating_log = await db.ratings.load(prod_id)
+    if rating_log is None:
+        rating_log = []
+
+    record = model.RatingRecord(
+        value_all = value_all,
+        value_verified = value_verified,
+        count_all = count_all,
+        count_verified = count_verified,
+        date = now
+    )
+
+    if rating_log:
+        last_rating = rating_log[-1]
+        # Rollback means the last not-for-sale entry is invalid because the old price
+        # came back within a short time
+        is_rollback = (
+            len(rating_log) >= 2
+            and record.same_price(rating_log[-2])
+            and last_rating.value_all is None
+            and (record.date - last_rating.date) < datetime.timedelta(hours=4)
+        )
+        if is_rollback:
+            # Remove the last not-for-sale entry
+            logger.warning(f"Rating rollback for {prod_id}")
+            rating_log.pop()
+        elif not record.same_rating(last_rating):
+            rating_log.append(record)
+    elif record.value_all is not None:
+        rating_log.append(record)
+
+    # Only save if it has entries
+    if rating_log:
+        await db.ratings.save(rating_log, prod_id)
 
 
 async def product_worker(session, qman, db, worker_number):
@@ -243,10 +280,6 @@ async def product_worker(session, qman, db, worker_number):
             v2_cont = await session.fetch_product_v2(prod_id)
             has_v2 = v2_cont and "_embedded" in v2_cont
             if has_v2:
-                v2_cont["ratings"] = {
-                    "all": await session.fetch_ratings(prod_id),
-                    "verified": await session.fetch_ratings(prod_id, True)
-                    }
                 dataextractors.extract_properties_v2(prod, v2_cont)
                 prod.access = 2
                 # Add referenced products to queue
@@ -296,6 +329,31 @@ async def product_worker(session, qman, db, worker_number):
                             await db.manifest_v2.save(manifest, mf_id)
                         else:
                             logger.debug(f"Not redownloading manifest v2 {mf_id}")
+
+            all_ratings = await session.fetch_ratings(prod_id)
+            if all_ratings is not None:
+                value_all = all_ratings["value"]
+                count_all = all_ratings["count"]
+            else:
+                value_all = None
+                count_all = None
+            verified_ratings = await session.fetch_ratings(prod_id, True)
+            if verified_ratings is not None:
+                value_verified = verified_ratings["value"]
+                count_verified = verified_ratings["count"]
+            else:
+                value_verified = None
+                count_verified = None
+
+            await update_ratings(
+                db,
+                prod_id=prod_id,
+                value_all=value_all,
+                value_verified=value_verified,
+                count_all=count_all,
+                count_verified=count_verified,
+                now=datetime.datetime.now(datetime.timezone.utc)
+            )
 
             prod.last_updated = timestamp
 
@@ -412,6 +470,7 @@ class ProcessorData:
     product: model.Product = None
     changelog: List[model.ChangeRecord] = None
     prices: List[model.PriceRecord] = None
+    ratings: List[model.RatingRecord] = None
 
 async def processor_worker(db, ids, processors, worker_num):
     wants = set.union(*[processor.wants for processor in processors])
@@ -425,6 +484,8 @@ async def processor_worker(db, ids, processors, worker_num):
             processor_data.changelog = await db.changelog.load(prod_id)
         if "prices" in wants:
             processor_data.prices = await db.prices.load(prod_id)
+        if "ratings" in wants:
+            processor_data.ratings = await db.ratings.load(prod_id)
         for processor in processors:
             await processor.process(processor_data)
 
@@ -466,6 +527,7 @@ def main():
         processors.append(StartpageProcessor(db))
     if "charts" in tasks:
         processors.append(ChartsProcessor(db))
+        processors.append(RatingChartsProcessor(db))
     if "versions" in tasks:
         processors.append(VersionsProcessor(db))
     if "dependencies" in tasks:
