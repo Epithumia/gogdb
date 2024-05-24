@@ -218,15 +218,7 @@ class RatingRecord:
             self.count_verified == other.count_verified
         )
 
-@defaultdataclass
-class Rating:
-    value: float
-    count: int
 
-@defaultdataclass
-class GameRating:
-    all: Rating
-    verified: Rating
 
 @defaultdataclass
 class Build:
