@@ -298,7 +298,6 @@ class Product:
     description: str
     overview: str
     additional_requirements: str
-    ratings: GameRating
     changelog: str
 
     dl_bonus: List[BonusDownload]
