@@ -224,7 +224,7 @@ async def update_ratings(db, prod_id, value_all, value_verified, count_all, coun
         # came back within a short time
         is_rollback = (
             len(rating_log) >= 2
-            and record.same_price(rating_log[-2])
+            and record.same_rating(rating_log[-2])
             and last_rating.value_all is None
             and (record.date - last_rating.date) < datetime.timedelta(hours=4)
         )
