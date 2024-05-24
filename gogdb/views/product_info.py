@@ -118,8 +118,6 @@ async def product_info(prod_id):
         }
         ratingframes.append(frame)
 
-    print(ratingframes)
-
     # Prefetch referenced products
     referenced_ids = {
         "editions": [edition.id for edition in product.editions],
