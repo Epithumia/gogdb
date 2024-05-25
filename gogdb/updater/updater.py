@@ -17,7 +17,7 @@ from gogdb.updater.gogsession import GogSession
 import gogdb.updater.dataextractors as dataextractors
 from gogdb.updater.indexdb import IndexDbProcessor
 from gogdb.updater.startpage import StartpageProcessor
-from gogdb.updater.charts import ChartsProcessor, RatingChartsProcessor
+from gogdb.updater.charts import ChartsProcessor, RatingChartsProcessor, RankingChartsProcessor
 from gogdb.updater.versions import VersionsProcessor
 from gogdb.updater.dependencies import DependenciesProcessor
 
@@ -156,6 +156,13 @@ async def catalog_worker(session, qman, db):
                 price_final = cat_entry.price_final,
                 now = now
             )
+            await update_rankings(
+                db,
+                prod_id=prod_id,
+                bestselling=cat_entry.pos_bestselling,
+                trending=cat_entry.pos_trending,
+                now=now
+            )
         else:
             await update_price(
                 db,
@@ -165,6 +172,13 @@ async def catalog_worker(session, qman, db):
                 price_base = None,
                 price_final = None,
                 now = now
+            )
+            await update_rankings(
+                db,
+                prod_id=prod_id,
+                bestselling=None,
+                trending=None,
+                now=now
             )
     return merged_res
 
@@ -241,6 +255,40 @@ async def update_ratings(db, prod_id, value_all, value_verified, count_all, coun
     if rating_log:
         await db.ratings.save(rating_log, prod_id)
 
+
+async def update_rankings(db, prod_id, bestselling, trending, now):
+    ranking_log = await db.rankings.load(prod_id)
+    if ranking_log is None:
+        ranking_log = []
+
+    record = model.RankingRecord(
+        bestselling=bestselling,
+        trending=trending,
+        date = now
+    )
+
+    if ranking_log:
+        last_ranking = ranking_log[-1]
+        # Rollback means the last not-for-sale entry is invalid because the old price
+        # came back within a short time
+        is_rollback = (
+            len(ranking_log) >= 2
+            and record.same_rating(ranking_log[-2])
+            and last_ranking.bestselling is None
+            and (record.date - last_ranking.date) < datetime.timedelta(hours=4)
+        )
+        if is_rollback:
+            # Remove the last not-for-sale entry
+            logger.warning(f"Rating rollback for {prod_id}")
+            ranking_log.pop()
+        elif not record.same_ranking(last_ranking):
+            ranking_log.append(record)
+    elif record.bestselling is not None:
+        ranking_log.append(record)
+
+    # Only save if it has entries
+    if ranking_log:
+        await db.rankings.save(ranking_log, prod_id)
 
 async def product_worker(session, qman, db, worker_number):
     while True:
@@ -471,6 +519,7 @@ class ProcessorData:
     changelog: List[model.ChangeRecord] = None
     prices: List[model.PriceRecord] = None
     ratings: List[model.RatingRecord] = None
+    rankings: List[model.RankingRecord] = None
 
 async def processor_worker(db, ids, processors, worker_num):
     wants = set.union(*[processor.wants for processor in processors])
@@ -486,6 +535,8 @@ async def processor_worker(db, ids, processors, worker_num):
             processor_data.prices = await db.prices.load(prod_id)
         if "ratings" in wants:
             processor_data.ratings = await db.ratings.load(prod_id)
+        if "rankings" in wants:
+            processor_data.rankings = await db.rankings.load(prod_id)
         for processor in processors:
             await processor.process(processor_data)
 
@@ -528,6 +579,7 @@ def main():
     if "charts" in tasks:
         processors.append(ChartsProcessor(db))
         processors.append(RatingChartsProcessor(db))
+        processors.append(RankingChartsProcessor(db))
     if "versions" in tasks:
         processors.append(VersionsProcessor(db))
     if "dependencies" in tasks:

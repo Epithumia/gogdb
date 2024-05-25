@@ -118,6 +118,39 @@ async def product_info(prod_id):
         }
         ratingframes.append(frame)
 
+    ranking_history = await storagedb.rankings.load(prod_id)
+    if not ranking_history:
+        ranking_history = []
+
+    ranking_chart = {"labels": [], "values": [], "max": 0}
+    if ranking_history:
+        current_ranking = copy.copy(ranking_history[-1])
+        current_ranking.date = datetime.datetime.now(datetime.timezone.utc)
+        ranking_history.append(current_ranking)
+        last_ranking = None
+        for entry in ranking_history:
+            if entry.bestselling is not None:
+                ranking_chart["labels"].append(entry.date.isoformat())
+                ranking_chart["values"].append(str(entry.bestselling))
+                ranking_chart["max"] = max(
+                    ranking_chart["max"], entry.bestselling)
+            elif last_ranking is not None:
+                ranking_chart["labels"].append(entry.date.isoformat())
+                ranking_chart["values"].append(str(last_ranking))
+                ranking_chart["labels"].append(entry.date.isoformat())
+                ranking_chart["values"].append(None)
+            last_ranking = entry.bestselling
+
+    rankingframes = []
+    for start, end in zip(ranking_history[:-1], ranking_history[1:]):
+        frame = {
+            "start": start.date,
+            "end": end.date,
+            "bestselling": start.bestselling,
+            "trending": start.trending,
+        }
+        rankingframes.append(frame)
+
     # Prefetch referenced products
     referenced_ids = {
         "editions": [edition.id for edition in product.editions],
@@ -159,8 +192,10 @@ async def product_info(prod_id):
         referenced_products=referenced_products,
         pricehistory=history_chart,
         ratinghistory=rating_chart,
+        rankinghistory=ranking_chart,
         priceframes=priceframes,
         ratingframes=ratingframes,
+        rankingframes=rankingframes,
         has_old_prices=has_old_prices,
         changelog=changelog
     ))

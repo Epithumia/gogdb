@@ -109,6 +109,7 @@ class Storage:
         self.prices = StorageItem(self.path_prices, self.make_prices)
         self.prices_old = StorageItem(self.path_prices_old, self.make_prices)
         self.ratings = StorageItem(self.path_ratings, self.make_ratings)
+        self.rankings = StorageItem(self.path_rankings, self.make_rankings)
         self.changelog = StorageItem(self.path_changelog, self.make_changelog)
         self.manifest_v1 = StorageItem(self.path_manifest_v1, compressed=True)
         self.manifest_v2 = StorageItem(self.path_manifest_v2, compressed=True)
@@ -163,6 +164,16 @@ class Storage:
             class_from_json(model.RatingRecord, record_data) for record_data in json_data
             ]
         return result
+    
+    def path_rankings(self, product_id):
+        return self.storage_path / f"products/{product_id}/rankings.json"
+    
+    @staticmethod
+    def make_rankings(json_data):
+        result = [
+            class_from_json(model.RankingRecord, record_data) for record_data in json_data
+            ]
+        return result
 
     def path_changelog(self, product_id):
         return self.storage_path / f"products/{product_id}/changes.json"
@@ -205,3 +216,6 @@ class Storage:
 
     def path_rating_chart(self, product_id):
         return self.storage_path / f"charts/{product_id}-ratings.svg.gz"
+    
+    def path_rankings_chart(self, product_id):
+        return self.storage_path / f"charts/{product_id}-rankings.svg.gz"

@@ -80,6 +80,7 @@
   <a href="#prices" class="tabs-item no-underline">Prices</a>
   <a href="#details" class="tabs-item no-underline">Details</a>
   <a href="#ratings" class="tabs-item no-underline">User ratings</a>
+  <a href="#rankings" class="tabs-item no-underline">Store rankings</a>
   <a href="#references" class="tabs-item no-underline">References</a>
   <a href="#downloads" class="tabs-item no-underline">Downloads</a>
   <a href="#builds" class="tabs-item no-underline">Builds</a>
@@ -393,6 +394,39 @@
       {% else %}
       <td>{{ rating.all_ratings }}</td>
       <td>{{ rating.verified_ratings }}</td>
+      {% endif %}
+    </tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+</div>
+
+<div id="tab-rankings" class="tab">
+  {% if rankingframes %}
+  <h2>Store rankings</h2>
+  {% if rankinghistory.max > 0 %}
+  <div id="chart-container" class="shadow">
+    <object class="chart-object" type="image/svg+xml" data="{{ url_for('rankings_charts', prod_id=product.id) }}"></object>
+  </div>
+  {% endif %}
+  <table class="shadow cellborder">
+    <tr>
+      <th>Start</th>
+      <th>End</th>
+      <th>Bestselling rank</th>
+      <th>Trending rank</th>
+    </tr>
+    {% for ranking in rankingframes %}
+    <tr>
+      <td>{{ ranking.start | datetime_day }}</td>
+      <td>{{ ranking.end | datetime_day }}</td>
+      {% if ranking.bestselling is none and rating.trending is none %}
+      <td>-</td>
+      <td>-</td>
+      <td>-</td>
+      {% else %}
+      <td>{{ ranking.bestselling }}</td>
+      <td>{{ ranking.trending }}</td>
       {% endif %}
     </tr>
     {% endfor %}

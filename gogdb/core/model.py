@@ -220,6 +220,19 @@ class RatingRecord:
         )
 
 @defaultdataclass
+class RankingRecord:
+    bestselling: int
+    trending: int
+    date: datetime.datetime
+
+    def same_ranking(self, other):
+        return (
+            (self.bestselling == other.bestselling and
+            self.trending == other.trending) or
+            self.date.date == other.date.date
+        )
+
+@defaultdataclass
 class Build:
     id: int
     product_id: int
