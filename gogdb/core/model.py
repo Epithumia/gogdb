@@ -212,13 +212,12 @@ class RatingRecord:
 
     def same_rating(self, other):
         return (
-            self.value_all == other.value_all and
+            (self.value_all == other.value_all and
             self.value_verified == other.value_verified and
             self.count_all == other.count_all and
-            self.count_verified == other.count_verified
+            self.count_verified == other.count_verified) or
+            self.date.date == other.date.date
         )
-
-
 
 @defaultdataclass
 class Build:
