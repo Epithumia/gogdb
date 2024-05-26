@@ -216,7 +216,7 @@ class RatingRecord:
             self.value_verified == other.value_verified and
             self.count_all == other.count_all and
             self.count_verified == other.count_verified) or
-            self.date.date == other.date.date
+            self.date.date() == other.date.date()
         )
 
 @defaultdataclass
@@ -229,7 +229,7 @@ class RankingRecord:
         return (
             (self.bestselling == other.bestselling and
             self.trending == other.trending) or
-            self.date.date == other.date.date
+            self.date.date() == other.date.date()
         )
 
 @defaultdataclass
