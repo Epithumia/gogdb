@@ -277,7 +277,7 @@ async def update_rankings(db, prod_id, bestselling, trending, now):
         # came back within a short time
         is_rollback = (
             len(ranking_log) >= 2
-            and record.same_rating(ranking_log[-2])
+            and record.same_ranking(ranking_log[-2])
             and last_ranking.bestselling is None
             and (record.date - last_ranking.date) < datetime.timedelta(hours=4)
         )
