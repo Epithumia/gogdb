@@ -135,10 +135,10 @@ async def catalog_worker(session, qman, db):
     for cat_entry in merged_res:
         bestselling_entry = bestselling_by_id.get(cat_entry.id)
         if bestselling_entry:
-            cat_entry.pos_bestselling = bestselling_entry.position
+            cat_entry.pos_bestselling = bestselling_entry.position + 1
         trending_entry = trending_by_id.get(cat_entry.id)
         if trending_entry:
-            cat_entry.pos_trending = trending_entry.position
+            cat_entry.pos_trending = trending_entry.position + 1
 
     now = datetime.datetime.now(datetime.timezone.utc)
     all_ids = qman.scheduled_products.copy()
