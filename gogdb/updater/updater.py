@@ -136,9 +136,13 @@ async def catalog_worker(session, qman, db):
         bestselling_entry = bestselling_by_id.get(cat_entry.id)
         if bestselling_entry:
             cat_entry.pos_bestselling = bestselling_entry.position + 1
+        else:
+            cat_entry.pos_bestselling = None
         trending_entry = trending_by_id.get(cat_entry.id)
         if trending_entry:
             cat_entry.pos_trending = trending_entry.position + 1
+        else:
+            cat_entry.pos_trending = None
 
     now = datetime.datetime.now(datetime.timezone.utc)
     all_ids = qman.scheduled_products.copy()
