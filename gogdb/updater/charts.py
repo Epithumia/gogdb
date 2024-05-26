@@ -273,13 +273,13 @@ class RankingChartsProcessor:
         dataseries_x_ts = [date_to_timestamp(x) for x in dataseries_x]
         dataseries = list(zip(dataseries_x_ts, dataseries_best_y))
         dataseries_v = list(zip(dataseries_x_ts, dataseries_trend_y))
-        max_rating = max(max(filter(lambda x: x is not None, dataseries_best_y)), max(filter(lambda x: x is not None, dataseries_trend_y)))
+        max_ranking = max(max(filter(lambda x: x is not None, dataseries_best_y)), max(filter(lambda x: x is not None, dataseries_trend_y)))
 
-        y_scale = calculate_y_scale(0, max_rating, steps_pref=[5, 4, 6])
+        y_scale = calculate_y_scale(0, max_ranking, steps_pref=[5, 4, 6])
         x_scale = calculate_x_scale(dataseries_x[0], dataseries_x[-1], max_steps=10)
         x_scale_ts = [date_to_timestamp(d) for d in x_scale]
 
-        chart = pygal.XY()
+        chart = pygal.XY(inverse_y_axis=True)
         chart.width = 1000
         chart.height = 300
         chart.show_legend = False
